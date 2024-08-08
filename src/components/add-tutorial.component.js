@@ -1,5 +1,8 @@
 import React, { useState } from 'react'
 import { connect } from 'react-redux'
+import { useMutation } from '@apollo/client'
+import { ADD_TUTORIAL } from '../types/gqlQueries'
+
 import { createTutorial } from '../actions/tutorials'
 
 const AddTutorial = ({ createTutorial }) => {
@@ -8,6 +11,17 @@ const AddTutorial = ({ createTutorial }) => {
   const [description, setDescription] = useState('')
   const [, setPublished] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+
+  const [addTutorial] = useMutation(ADD_TUTORIAL, {
+    onCompleted: (data) => {
+      console.log('onCompleted data=', data.addTutorial)
+      setId(data.addTutorial.id)
+      setTitle(data.addTutorial.title)
+      setDescription(data.addTutorial.description)
+      setPublished(data.addTutorial.published)
+      setSubmitted(true)
+    },
+  })
 
   const onChangeTitle = (e) => {
     setTitle(e.target.value)
@@ -18,12 +32,8 @@ const AddTutorial = ({ createTutorial }) => {
   }
 
   const saveTutorial = async () => {
-    const data = await createTutorial(title, description)
-    setId(data.id)
-    setTitle(data.title)
-    setDescription(data.description)
-    setPublished(data.published)
-    setSubmitted(true)
+    // const data = await createTutorial(title, description)
+    addTutorial({ variables: { title, description } })
   }
 
   const newTutorial = () => {

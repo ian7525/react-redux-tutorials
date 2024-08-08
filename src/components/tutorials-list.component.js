@@ -1,24 +1,35 @@
 import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
-import {
-  retrieveTutorials as _retrieveTutorials,
-  findTutorialsByTitle,
-  deleteAllTutorials,
-} from '../actions/tutorials'
 import { Link } from 'react-router-dom'
+
+import { retrieveTutorials, deleteAllTutorials } from '../actions/tutorialsGQL'
+
+import {
+  useGetAllTutorials,
+  useDeleteAllTutorials,
+  useGetTutorialByTitle,
+} from '../customHooks/useTutorialGql'
 
 const TutorialsList = ({
   retrieveTutorials,
   deleteAllTutorials,
-  findTutorialsByTitle,
   tutorials,
 }) => {
   const [currentTutorial, setCurrentTutorial] = useState(null)
   const [currentIndex, setCurrentIndex] = useState(-1)
   const [searchTitle, setSearchTitle] = useState('')
 
+  const { getAllTutorials } = useGetAllTutorials()
+  const { deleteAllTutorials: _deleteAllTutorials } = useDeleteAllTutorials()
+  const { getTutorialByTitle } = useGetTutorialByTitle()
+
   useEffect(() => {
-    retrieveTutorials()
+    async function _getAllTutorials() {
+      const { data } = await getAllTutorials()
+      console.log('getAllTutorials data=', data)
+      retrieveTutorials(data.tutorials)
+    }
+    _getAllTutorials()
   }, [])
 
   const onChangeSearchTitle = (e) => {
@@ -37,6 +48,7 @@ const TutorialsList = ({
 
   const removeAllTutorials = async () => {
     try {
+      await _deleteAllTutorials()
       await deleteAllTutorials()
       refreshData()
     } catch (e) {
@@ -44,9 +56,12 @@ const TutorialsList = ({
     }
   }
 
-  const findByTitle = () => {
+  const findByTitle = async () => {
     refreshData()
-    findTutorialsByTitle(searchTitle)
+    console.log('findByTitle searchTitle=', searchTitle)
+    const { data } = await getTutorialByTitle(searchTitle)
+    console.log('findByTitle data=', data)
+    retrieveTutorials(data.tutorials)
   }
 
   return (
@@ -75,7 +90,7 @@ const TutorialsList = ({
         <h4>Tutorials List</h4>
 
         <ul className="list-group">
-          {tutorials &&
+          {Array.isArray(tutorials) &&
             tutorials.map((tutorial, index) => (
               <li
                 className={
@@ -144,7 +159,6 @@ const mapStateToProps = (state) => {
 }
 
 export default connect(mapStateToProps, {
-  retrieveTutorials: _retrieveTutorials,
-  findTutorialsByTitle,
+  retrieveTutorials,
   deleteAllTutorials,
 })(TutorialsList)
