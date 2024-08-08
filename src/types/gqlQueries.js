@@ -94,8 +94,6 @@ export const DELETE_TUTORIAL = gql`
 
 export const DELETE_ALL_TUTORIALS = gql`
   mutation DeleteAllTutorials {
-    deleteAllTutorials {
-      id
-    }
+    deleteAllTutorials
   }
 `

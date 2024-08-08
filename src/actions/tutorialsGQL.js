@@ -20,11 +20,11 @@ export const retrieveTutorials = (data) => async (dispatch) => {
 
 export const createTutorial = (data) => async (dispatch) => {
   try {
-    dispatch({
+    const res = dispatch({
       type: CREATE_TUTORIAL,
       payload: data,
     })
-    return Promise.resolve(data)
+    return Promise.resolve(res)
   } catch (err) {
     return Promise.reject(err)
   }

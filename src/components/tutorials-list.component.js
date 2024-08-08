@@ -19,17 +19,17 @@ const TutorialsList = ({
   const [currentIndex, setCurrentIndex] = useState(-1)
   const [searchTitle, setSearchTitle] = useState('')
 
-  const { getAllTutorials } = useGetAllTutorials()
-  const { deleteAllTutorials: _deleteAllTutorials } = useDeleteAllTutorials()
+  const { getAllTutorialsGql } = useGetAllTutorials()
+  const { deleteAllTutorialsGql } = useDeleteAllTutorials()
   const { getTutorialByTitle } = useGetTutorialByTitle()
 
   useEffect(() => {
-    async function _getAllTutorials() {
-      const { data } = await getAllTutorials()
-      console.log('getAllTutorials data=', data)
+    async function listAllTutorials() {
+      const { data } = await getAllTutorialsGql()
       retrieveTutorials(data.tutorials)
     }
-    _getAllTutorials()
+
+    listAllTutorials()
   }, [])
 
   const onChangeSearchTitle = (e) => {
@@ -48,7 +48,7 @@ const TutorialsList = ({
 
   const removeAllTutorials = async () => {
     try {
-      await _deleteAllTutorials()
+      await deleteAllTutorialsGql()
       await deleteAllTutorials()
       refreshData()
     } catch (e) {
@@ -58,9 +58,7 @@ const TutorialsList = ({
 
   const findByTitle = async () => {
     refreshData()
-    console.log('findByTitle searchTitle=', searchTitle)
     const { data } = await getTutorialByTitle(searchTitle)
-    console.log('findByTitle data=', data)
     retrieveTutorials(data.tutorials)
   }
 

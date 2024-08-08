@@ -1,16 +1,17 @@
-import React, { Component, useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client'
-
-import { updateTutorial, deleteTutorial } from '../actions/tutorials'
-import { getTutorial as _getTutorial } from '../services/tutorial.service'
 
 import {
-  UPDATE_TUTORIAL,
-  DELETE_TUTORIAL,
-  GET_TUTORIAL,
-} from '../types/gqlQueries'
+  useGetTutorial,
+  useUpdateTutorial,
+  useDeleteTutorial,
+} from '../customHooks/useTutorialGql'
+import {
+  retrieveTutorials,
+  updateTutorial,
+  deleteTutorial,
+} from '../actions/tutorialsGQL'
 
 function withRouter(Component) {
   return (props) => {
@@ -24,27 +25,14 @@ const Tutorial = ({ params, navigate }) => {
   const [currentTutorial, setCurrentTutorial] = useState(null)
   const [message, setMessage] = useState('')
 
-  const [tutorial, { error, data }] = useLazyQuery(GET_TUTORIAL, {
-    onCompleted: (data) => {
-      console.log('onCompleted data.tutorial=', data.tutorial)
-    },
-  })
-
-  const [updateTutorial] = useMutation(UPDATE_TUTORIAL, {
-    onCompleted: (data) => {
-      console.log('onCompleted data.updateTutorial=', data.updateTutorial)
-    },
-  })
-  const [deleteTutorial] = useMutation(DELETE_TUTORIAL, {
-    onCompleted: (data) => {
-      console.log('onCompleted data.deleteTutorial=', data.deleteTutorial)
-    },
-  })
+  const { getTutorialById } = useGetTutorial()
+  const { updateTutorial } = useUpdateTutorial()
+  const { deleteTutorial } = useDeleteTutorial()
 
   useEffect(() => {
     const { id } = params
 
-    getTutorialById(id)
+    retrieveTutorialById(id)
   }, [])
 
   const onChangeTitle = (e) => {
@@ -63,57 +51,23 @@ const Tutorial = ({ params, navigate }) => {
     setCurrentTutorial(newTutorial)
   }
 
-  // const getTutorial = async (id) => {
-  //   try {
-  //     const response = await _getTutorial(id)
-  //     setCurrentTutorial(response.data)
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }
-
-  const getTutorialById = async (id) => {
+  const retrieveTutorialById = async (id) => {
     try {
-      const { data } = await tutorial({ variables: { id } })
+      const { data } = await getTutorialById(id)
       setCurrentTutorial(data.tutorial)
     } catch (error) {
       console.log(error)
     }
   }
 
-  // const updateStatus = async (status) => {
-  //   const { id, title, description } = currentTutorial
-  //   const data = {
-  //     id,
-  //     title,
-  //     description,
-  //     published: status,
-  //   }
-
-  //   try {
-  //     await updateTutorial(id, data)
-
-  //     const newTutorial = {
-  //       ...currentTutorial,
-  //       published: status,
-  //     }
-  //     setCurrentTutorial(newTutorial)
-  //     setMessage('The status was updated successfully!')
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }
-
   const updateStatus = async (status) => {
     const { id, title, description } = currentTutorial
     try {
       const { data } = await updateTutorial({
-        variables: {
-          id,
-          title,
-          description,
-          published: status,
-        },
+        id,
+        title,
+        description,
+        published: status,
       })
       setCurrentTutorial(data.updateTutorial)
       setMessage('The status was updated successfully!')
@@ -122,24 +76,13 @@ const Tutorial = ({ params, navigate }) => {
     }
   }
 
-  // const updateContent = async () => {
-  //   try {
-  //     await updateTutorial(currentTutorial.id, currentTutorial)
-  //     setMessage('The tutorial was updated successfully!')
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }
-
   const updateContent = async () => {
     try {
       const { id, title, description } = currentTutorial
       await updateTutorial({
-        variables: {
-          id,
-          title,
-          description,
-        },
+        id,
+        title,
+        description,
       })
       setMessage('The tutorial was updated successfully!')
     } catch (error) {
@@ -147,22 +90,9 @@ const Tutorial = ({ params, navigate }) => {
     }
   }
 
-  // const removeTutorial = async () => {
-  //   try {
-  //     await deleteTutorial(currentTutorial.id)
-  //     navigate('/tutorials')
-  //   } catch (error) {
-  //     console.log(error)
-  //   }
-  // }
-
   const removeTutorial = async () => {
     try {
-      await deleteTutorial({
-        variables: {
-          id: currentTutorial.id,
-        },
-      })
+      await deleteTutorial(currentTutorial.id)
       navigate('/tutorials')
     } catch (error) {
       console.log(error)
@@ -247,5 +177,5 @@ const Tutorial = ({ params, navigate }) => {
 }
 
 export default withRouter(
-  connect(null, { updateTutorial, deleteTutorial, _getTutorial })(Tutorial)
+  connect(null, { retrieveTutorials, updateTutorial, deleteTutorial })(Tutorial)
 )
